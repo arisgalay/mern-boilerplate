@@ -15,7 +15,17 @@ const app = express()
 const port = process.env.PORT || 8000
 
 //middle ware
-app.use(cors())
+//app.use(cors())
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  )
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE')
+  next()
+})
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
@@ -24,25 +34,25 @@ app.use('/api/places', placesRoutes)
 app.use('/api/users', usersRoutes)
 // incorrect routes error handling
 app.use((req, res, next) => {
-    const error = new HttpError('Could not find this route.', 404)
-    throw error
+  const error = new HttpError('Could not find this route.', 404)
+  throw error
 })
 //middle ware
 app.use((error, req, res, next) => {
-    if (res.headerSent) {
-        return next(error)
-    }
-    res.status(error.code || 500)
-    res.json({ message: error.message || 'An unknown error occured!' })
+  if (res.headersSent) {
+    return next(error)
+  }
+  res.status(error.code || 500)
+  res.json({ message: error.message || 'An unknown error occured!' })
 })
 
 mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => {
-        app.listen(port, () => {
-            console.log(`Backend running on port: ${port}`)
-        })
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Backend running on port: ${port}`)
     })
-    .catch((err) => {
-        console.error(`${err}`)
-    })
+  })
+  .catch((err) => {
+    console.error(`${err}`)
+  })
